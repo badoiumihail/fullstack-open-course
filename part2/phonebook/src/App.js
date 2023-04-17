@@ -1,9 +1,10 @@
+/* eslint-disable no-restricted-globals */
 import { useState, useEffect, createContext } from "react";
-import axios from "axios";
 import { nanoid } from "nanoid";
 import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
 import Person from "./components/Person";
+import personsService from "./services/personsService";
 
 export const MyContext = createContext();
 
@@ -13,10 +14,9 @@ export default function App() {
     const [newPhone, setNewPhone] = useState("");
     const [filter, setFilter] = useState("");
 
-    // fetch initial data from db
     useEffect(() => {
-        axios
-            .get(`http://localhost:3001/persons`)
+        personsService
+            .getAll()
             .then((response) => setPersons(response.data))
             .catch((err) => console.log(err.message));
     }, []);
@@ -29,16 +29,66 @@ export default function App() {
             return;
         }
 
-        let isNamePresent = persons.some((person) => person.name === newName);
+        let personIndex = persons.findIndex(
+            (person) => person.name === newName
+        );
 
-        if (isNamePresent) {
-            alert(`${newName} is already in the list!`);
+        if (personIndex !== -1) {
+            const person = persons[personIndex];
+            if (newPhone === person.number) {
+                alert(
+                    `${newName} with phone ${newPhone} is already in the list!`
+                );
+            } else {
+                const result = confirm(
+                    `${newName} is already added to the phonebook, replace the old number with a new one?`
+                );
+                if (result) {
+                    const updatePhone = { ...person, number: newPhone };
+                    const id = person.id;
+                    personsService
+                        .update(person.id, updatePhone)
+                        .then((response) => {
+                            setPersons(
+                                persons.map((person) =>
+                                    person.id === id ? response.data : person
+                                )
+                            );
+                        })
+                        .catch((err) => console.log(err.message));
+                }
+            }
+            setNewName("");
+            setNewPhone("");
             return;
         }
 
-        setPersons(persons.concat({ name: newName, number: newPhone }));
+        const newPerson = { name: newName, number: newPhone };
+
+        personsService
+            .create(newPerson)
+            .then((response) => {
+                setPersons(persons.concat(response.data));
+            })
+            .catch((err) => console.log(err.message));
+
         setNewName("");
         setNewPhone("");
+    }
+
+    function handleClick(id) {
+        return function deletePerson() {
+            const updatePersonsState = persons.filter(
+                (person) => person.id !== id
+            );
+
+            personsService
+                .deleteOne(id)
+                .then(() => {
+                    setPersons(updatePersonsState);
+                })
+                .catch((err) => console.log(err.message));
+        };
     }
 
     function handleInputName(event) {
@@ -59,8 +109,10 @@ export default function App() {
             filteredEntries.push(
                 <Person
                     key={nanoid()}
+                    id={person.id}
                     name={person.name}
                     phone={person.number}
+                    handleClick={handleClick}
                 />
             );
     });
