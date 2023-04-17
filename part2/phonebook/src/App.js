@@ -1,6 +1,6 @@
-import { useState, createContext } from "react";
+import { useState, useEffect, createContext } from "react";
+import axios from "axios";
 import { nanoid } from "nanoid";
-
 import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
 import Person from "./components/Person";
@@ -8,12 +8,18 @@ import Person from "./components/Person";
 export const MyContext = createContext();
 
 export default function App() {
-    const [persons, setPersons] = useState([
-        { name: "Arthas Menethil", phone: "0726281267" },
-    ]);
+    const [persons, setPersons] = useState([]);
     const [newName, setNewName] = useState("");
     const [newPhone, setNewPhone] = useState("");
     const [filter, setFilter] = useState("");
+
+    // fetch initial data from db
+    useEffect(() => {
+        axios
+            .get(`http://localhost:3001/persons`)
+            .then((response) => setPersons(response.data))
+            .catch((err) => console.log(err.message));
+    }, []);
 
     function handleSubmit(event) {
         event.preventDefault();
@@ -30,7 +36,7 @@ export default function App() {
             return;
         }
 
-        setPersons(persons.concat({ name: newName, phone: newPhone }));
+        setPersons(persons.concat({ name: newName, number: newPhone }));
         setNewName("");
         setNewPhone("");
     }
@@ -54,7 +60,7 @@ export default function App() {
                 <Person
                     key={nanoid()}
                     name={person.name}
-                    phone={person.phone}
+                    phone={person.number}
                 />
             );
     });
