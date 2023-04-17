@@ -1,24 +1,3 @@
 {
-    "persons": [
-        {
-            "name": "Geralt of Rivia",
-            "number": "040-123456",
-            "id": 1
-        },
-        {
-            "name": "Arthas Menethil",
-            "number": "39-44-5323523",
-            "id": 2
-        },
-        {
-            "name": "Anakin Skywalker",
-            "number": "12-43-234345",
-            "id": 3
-        },
-        {
-            "name": "Aragorn II",
-            "number": "39-23-6423122",
-            "id": 4
-        }
-    ]
+  "persons": []
 }
